@@ -2,7 +2,7 @@
   "name": "@hexlet/code",
   "version": "1.0.0",
   "description": "Page-loader cli utility",
-  "main": "src/page-loader.js",
+  "main": "src/pageLoader.js",
   "scripts": {
     "test": "npx jest"
   },
@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/datsenko-md/fullstack-javascript-project-4#readme",
   "bin": {
-    "page-loader": "bin/page-loader.js"
+    "page-loader": "bin/pageLoader.js"
   },
   "type": "module",
   "devDependencies": {
