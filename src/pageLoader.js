@@ -2,10 +2,12 @@ import process from 'process';
 import fs from 'fs/promises';
 import axios from 'axios';
 import path from 'path';
+import debug from 'debug';
 import * as cheerio from 'cheerio';
 import * as f from './functions.js';
 
 const pageLoader = (inputUrl, outputDir = '') => {
+  const log = debug('page-loader');
   const normalizedInputUrl = f.addSlashToEnd(inputUrl);
   const url = new URL(normalizedInputUrl);
   const outputDirPath = path.resolve(process.cwd(), outputDir);
@@ -35,6 +37,7 @@ const pageLoader = (inputUrl, outputDir = '') => {
         if (f.isSameDomain(url.href, oldFilePath)) {
           $(element).attr(attributeName, newSrc);
           filesLinks[oldFilePath] = newFilePath;
+          log(`Source handled: ${oldSrc}`);
         }
       };
 
