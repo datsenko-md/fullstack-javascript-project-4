@@ -10,6 +10,10 @@
 
 ## Usage
 
-* `page-loader https://en.wikipedia.org/wiki/Krishna` // [asciinema](https://asciinema.org/a/596084)
+* `page-loader https://en.wikipedia.org/wiki/Krishna`
 * `page-loader -o tmp/nested https://en.wikipedia.org/wiki/Krishna`
 
+## Steps
+
+* [Step 1](https://asciinema.org/a/596084)
+* [Step 2](https://asciinema.org/a/596677)

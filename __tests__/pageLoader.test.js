@@ -13,14 +13,21 @@ const getFixturePath = (name) => path.join(__dirname, '..', '__fixtures__', name
 
 nock.disableNetConnect();
 
-const url = 'https://en.wikipedia.org/wiki/Krishna';
-const expectedFileName = 'en-wikipedia-org-wiki-Krishna.html';
+const url = 'https://ru.hexlet.io/courses';
+const fileName = 'ru-hexlet-io-courses.html';
+const filesDir = 'ru-hexlet-io-courses_files';
+const imageName = 'ru-hexlet-io-assets-professions-nodejs.png';
 const rootDir = process.cwd();
+
 let tmpDir;
 let expected;
+let responseHtml;
+let image;
 
 beforeAll(async () => {
-  expected = await fs.readFile(getFixturePath(expectedFileName), 'utf-8');
+  expected = await fs.readFile(getFixturePath('after.html'), 'utf-8');
+  responseHtml = await fs.readFile(getFixturePath('before.html'), 'utf-8');
+  image = await fs.readFile(getFixturePath('image.png'));
 });
 
 beforeEach(async () => {
@@ -34,25 +41,56 @@ afterEach(async () => {
 });
 
 test('pageLoader', async () => {
-  nock(/en\.wikipedia\.org/).get(/wiki\/Krishna/).reply(200, expected);
+  nock(/ru\.hexlet\.io/).get(/courses/).reply(200, responseHtml);
+  nock(/ru\.hexlet\.io/).get('/assets/professions/nodejs.png').replyWithFile(200, getFixturePath('image.png'));
+  nock(/ru\.hexlet2\.io/).get('/assets/professions/nodejs2.png').replyWithFile(200, getFixturePath('image2.png'));
   const filePath = await pageLoader(url);
+
+  const expectedFilePath = path.join(process.cwd(), fileName);
+  expect(filePath).toEqual(expectedFilePath);
+
   const actual = await fs.readFile(filePath, 'utf-8');
   expect(actual).toEqual(expected);
+
+  const actualImagePath = path.join(process.cwd(), filesDir, imageName);
+  const actualImage = await fs.readFile(actualImagePath);
+  expect(actualImage).toEqual(image);
 });
 
 test('pageLoader custom dir', async () => {
-  nock(/en\.wikipedia\.org/).get(/wiki\/Krishna/).reply(200, expected);
-  const customDir = await fs.mkdtemp(path.join(tmpDir, 'nested'));
+  nock(/ru\.hexlet\.io/).get(/courses/).reply(200, responseHtml);
+  nock(/ru\.hexlet\.io/).get('/assets/professions/nodejs.png').replyWithFile(200, getFixturePath('image.png'));
+  nock(/ru\.hexlet2\.io/).get('/assets/professions/nodejs2.png').replyWithFile(200, getFixturePath('image2.png'));
+  const customDir = await fs.mkdtemp(path.join(tmpDir, 'nested-'));
+  const [nestedDirName] = customDir.split('/').reverse();
   const filePath = await pageLoader(url, customDir);
+
+  const expectedFilePath = path.join(process.cwd(), nestedDirName, fileName);
+  expect(filePath).toEqual(expectedFilePath);
+
   const actual = await fs.readFile(filePath, 'utf-8');
   expect(actual).toEqual(expected);
+
+  const actualImagePath = path.join(process.cwd(), nestedDirName, filesDir, imageName);
+  const actualImage = await fs.readFile(actualImagePath);
+  expect(actualImage).toEqual(image);
 });
 
 test('pageLoader custom dir relative path', async () => {
-  nock(/en\.wikipedia\.org/).get(/wiki\/Krishna/).reply(200, expected);
-  const customDir = await fs.mkdtemp(path.join(tmpDir, 'nested'));
-  const [dirName] = customDir.split('/').reverse();
-  const filePath = await pageLoader(url, dirName);
+  nock(/ru\.hexlet\.io/).get(/courses/).reply(200, responseHtml);
+  nock(/ru\.hexlet\.io/).get('/assets/professions/nodejs.png').replyWithFile(200, getFixturePath('image.png'));
+  nock(/ru\.hexlet2\.io/).get('/assets/professions/nodejs2.png').replyWithFile(200, getFixturePath('image2.png'));
+  const customDir = await fs.mkdtemp(path.join(tmpDir, 'nested-'));
+  const [nestedDirName] = customDir.split('/').reverse();
+  const filePath = await pageLoader(url, nestedDirName);
+
+  const expectedFilePath = path.join(process.cwd(), nestedDirName, fileName);
+  expect(filePath).toEqual(expectedFilePath);
+
   const actual = await fs.readFile(filePath, 'utf-8');
   expect(actual).toEqual(expected);
+
+  const actualImagePath = path.join(process.cwd(), nestedDirName, filesDir, imageName);
+  const actualImage = await fs.readFile(actualImagePath);
+  expect(actualImage).toEqual(image);
 });

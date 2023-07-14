@@ -7,7 +7,7 @@ const program = new Command();
 program
   .name('page-loader')
   .description('Page loader utility')
-  .version('0.0.1')
+  .version('0.0.2')
   .option('-o, --output <path>', 'output dir')
   .argument('<url>', 'URL of page')
   .action((url, options) => {
