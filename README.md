@@ -17,3 +17,4 @@
 
 * [Step 1](https://asciinema.org/a/596084)
 * [Step 2](https://asciinema.org/a/596677)
+* [Step 3](https://asciinema.org/a/596733)

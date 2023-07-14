@@ -6,37 +6,49 @@ import * as cheerio from 'cheerio';
 import * as f from './functions.js';
 
 const pageLoader = (inputUrl, outputDir = '') => {
-  const normalizedInputUrl = inputUrl.replace(/\/$/, '');
+  const normalizedInputUrl = f.addSlashToEnd(inputUrl);
+  const url = new URL(normalizedInputUrl);
   const outputDirPath = path.resolve(process.cwd(), outputDir);
-  const htmlFileName = f.getHtmlFileName(normalizedInputUrl);
+  const htmlFileName = f.getFileName(normalizedInputUrl, url);
   const htmlFilePath = path.resolve(outputDirPath, htmlFileName);
   const filesDirName = f.getFilesDirName(normalizedInputUrl);
   const filesDirPath = path.resolve(outputDirPath, filesDirName);
-  const url = new URL(normalizedInputUrl);
-  const imgLinks = {};
+  const filesLinks = {};
 
   return fs.access(outputDirPath)
     .catch(() => fs.mkdir(outputDirPath, { recursive: true }))
     .then(() => axios.get(normalizedInputUrl))
     .then((response) => cheerio.load(response.data))
     .then(($) => {
-      $('img').each((index, img) => {
-        const oldSrc = $(img).attr('src');
-        const oldImgPath = f.getImageUrl(oldSrc, url);
-        const newImgName = f.getImageFileName(oldImgPath);
-        const newImgPath = path.join(filesDirPath, newImgName);
-        const newSrc = path.join(filesDirName, newImgName);
-        $(img).attr('src', newSrc);
-        imgLinks[oldImgPath] = newImgPath;
-      });
+      const handleFile = (index, element) => {
+        const attributes = {
+          img: 'src',
+          script: 'src',
+          link: 'href',
+        };
+        const attributeName = attributes[element.name];
+        const oldSrc = $(element).attr(attributeName);
+        const oldFilePath = f.getFileUrl(oldSrc, url);
+        const newFileName = f.getFileName(oldFilePath, url);
+        const newFilePath = path.join(filesDirPath, newFileName);
+        const newSrc = path.join(filesDirName, newFileName);
+        if (f.isSameDomain(url.href, oldFilePath)) {
+          $(element).attr(attributeName, newSrc);
+          filesLinks[oldFilePath] = newFilePath;
+        }
+      };
+
+      $('img').each(handleFile);
+      $('script').each(handleFile);
+      $('link').each(handleFile);
 
       return fs.writeFile(htmlFilePath, $.html());
     })
-    .then(() => (Object.keys(imgLinks).length > 0 ? fs.mkdir(filesDirPath) : Promise.resolve({})))
-    .then(() => Object.keys(imgLinks).map((link) => axios.get(link, { responseType: 'arraybuffer' })))
+    .then(() => (Object.keys(filesLinks).length > 0 ? fs.mkdir(filesDirPath) : Promise.resolve({})))
+    .then(() => Object.keys(filesLinks).map((link) => axios.get(link, { responseType: 'arraybuffer' })))
     .then((promises) => Promise.all(promises))
     .then((responses) => responses.map((response) => fs
-      .writeFile(imgLinks[response.config.url], response.data, 'binary')))
+      .writeFile(filesLinks[response.config.url], response.data, 'binary')))
     .then((promises) => Promise.all(promises))
     .then(() => htmlFilePath);
 };

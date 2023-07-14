@@ -14,25 +14,37 @@ const getFixturePath = (name) => path.join(__dirname, '..', '__fixtures__', name
 nock.disableNetConnect();
 
 const url = 'https://ru.hexlet.io/courses';
-const fileName = 'ru-hexlet-io-courses.html';
-const filesDir = 'ru-hexlet-io-courses_files';
-const imageName = 'ru-hexlet-io-assets-professions-nodejs.png';
 const rootDir = process.cwd();
+const filesDir = 'ru-hexlet-io-courses_files';
+const htmlName = 'ru-hexlet-io-courses.html';
+const imageName = 'ru-hexlet-io-assets-professions-nodejs.png';
+const styleName = 'ru-hexlet-io-assets-application.css';
+const scriptName = 'ru-hexlet-io-packs-js-runtime.js';
 
 let tmpDir;
-let expected;
+let currFilesDir;
+let nestedDir;
+let currNestedFilesDir;
 let responseHtml;
-let image;
+let expectedHtml;
+let expectedImage;
+let expectedStyle;
+let expectedScript;
 
 beforeAll(async () => {
-  expected = await fs.readFile(getFixturePath('after.html'), 'utf-8');
   responseHtml = await fs.readFile(getFixturePath('before.html'), 'utf-8');
-  image = await fs.readFile(getFixturePath('image.png'));
+  expectedHtml = await fs.readFile(getFixturePath('after.html'), 'utf-8');
+  expectedImage = await fs.readFile(getFixturePath('image.png'));
+  expectedStyle = await fs.readFile(getFixturePath('style.css'));
+  expectedScript = await fs.readFile(getFixturePath('script.js'));
 });
 
 beforeEach(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'));
   process.chdir(tmpDir);
+  currFilesDir = path.join(process.cwd(), filesDir);
+  nestedDir = await fs.mkdtemp(path.join(tmpDir, 'nested-'));
+  currNestedFilesDir = path.join(nestedDir, filesDir);
 });
 
 afterEach(async () => {
@@ -41,56 +53,79 @@ afterEach(async () => {
 });
 
 test('pageLoader', async () => {
-  nock(/ru\.hexlet\.io/).get(/courses/).reply(200, responseHtml);
+  nock(/ru\.hexlet\.io/).persist().get(/courses/).reply(200, responseHtml);
   nock(/ru\.hexlet\.io/).get('/assets/professions/nodejs.png').replyWithFile(200, getFixturePath('image.png'));
-  nock(/ru\.hexlet2\.io/).get('/assets/professions/nodejs2.png').replyWithFile(200, getFixturePath('image2.png'));
-  const filePath = await pageLoader(url);
+  nock(/ru\.hexlet\.io/).get('/assets/application.css').replyWithFile(200, getFixturePath('style.css'));
+  nock(/ru\.hexlet\.io/).get('/packs/js/runtime.js').replyWithFile(200, getFixturePath('script.js'));
 
-  const expectedFilePath = path.join(process.cwd(), fileName);
-  expect(filePath).toEqual(expectedFilePath);
+  const actualHtmlPath = await pageLoader(url);
+  const actualHtml = await fs.readFile(actualHtmlPath, 'utf-8');
+  expect(actualHtml).toEqual(expectedHtml);
 
-  const actual = await fs.readFile(filePath, 'utf-8');
-  expect(actual).toEqual(expected);
-
-  const actualImagePath = path.join(process.cwd(), filesDir, imageName);
+  const actualImagePath = path.join(currFilesDir, imageName);
   const actualImage = await fs.readFile(actualImagePath);
-  expect(actualImage).toEqual(image);
+  expect(actualImage).toEqual(expectedImage);
+
+  const actualStylePath = path.join(currFilesDir, styleName);
+  const actualStyle = await fs.readFile(actualStylePath);
+  expect(actualStyle).toEqual(expectedStyle);
+
+  const actualScriptPath = path.join(currFilesDir, scriptName);
+  const actualScript = await fs.readFile(actualScriptPath);
+  expect(actualScript).toEqual(expectedScript);
 });
 
 test('pageLoader custom dir', async () => {
-  nock(/ru\.hexlet\.io/).get(/courses/).reply(200, responseHtml);
+  nock(/ru\.hexlet\.io/).persist().get(/courses/).reply(200, responseHtml);
   nock(/ru\.hexlet\.io/).get('/assets/professions/nodejs.png').replyWithFile(200, getFixturePath('image.png'));
-  nock(/ru\.hexlet2\.io/).get('/assets/professions/nodejs2.png').replyWithFile(200, getFixturePath('image2.png'));
-  const customDir = await fs.mkdtemp(path.join(tmpDir, 'nested-'));
-  const [nestedDirName] = customDir.split('/').reverse();
-  const filePath = await pageLoader(url, customDir);
+  nock(/ru\.hexlet\.io/).get('/assets/application.css').replyWithFile(200, getFixturePath('style.css'));
+  nock(/ru\.hexlet\.io/).get('/packs/js/runtime.js').replyWithFile(200, getFixturePath('script.js'));
 
-  const expectedFilePath = path.join(process.cwd(), nestedDirName, fileName);
-  expect(filePath).toEqual(expectedFilePath);
+  const actualHtmlPath = await pageLoader(url, nestedDir);
+  const expectedHtmlPath = path.join(nestedDir, htmlName);
 
-  const actual = await fs.readFile(filePath, 'utf-8');
-  expect(actual).toEqual(expected);
+  expect(actualHtmlPath).toEqual(expectedHtmlPath);
 
-  const actualImagePath = path.join(process.cwd(), nestedDirName, filesDir, imageName);
+  const actualHtml = await fs.readFile(actualHtmlPath, 'utf-8');
+  expect(actualHtml).toEqual(expectedHtml);
+
+  const actualImagePath = path.join(currNestedFilesDir, imageName);
   const actualImage = await fs.readFile(actualImagePath);
-  expect(actualImage).toEqual(image);
+  expect(actualImage).toEqual(expectedImage);
+
+  const actualStylePath = path.join(currNestedFilesDir, styleName);
+  const actualStyle = await fs.readFile(actualStylePath);
+  expect(actualStyle).toEqual(expectedStyle);
+
+  const actualScriptPath = path.join(currNestedFilesDir, scriptName);
+  const actualScript = await fs.readFile(actualScriptPath);
+  expect(actualScript).toEqual(expectedScript);
 });
 
 test('pageLoader custom dir relative path', async () => {
-  nock(/ru\.hexlet\.io/).get(/courses/).reply(200, responseHtml);
+  nock(/ru\.hexlet\.io/).persist().get(/courses/).reply(200, responseHtml);
   nock(/ru\.hexlet\.io/).get('/assets/professions/nodejs.png').replyWithFile(200, getFixturePath('image.png'));
-  nock(/ru\.hexlet2\.io/).get('/assets/professions/nodejs2.png').replyWithFile(200, getFixturePath('image2.png'));
-  const customDir = await fs.mkdtemp(path.join(tmpDir, 'nested-'));
-  const [nestedDirName] = customDir.split('/').reverse();
-  const filePath = await pageLoader(url, nestedDirName);
+  nock(/ru\.hexlet\.io/).get('/assets/application.css').replyWithFile(200, getFixturePath('style.css'));
+  nock(/ru\.hexlet\.io/).get('/packs/js/runtime.js').replyWithFile(200, getFixturePath('script.js'));
 
-  const expectedFilePath = path.join(process.cwd(), nestedDirName, fileName);
-  expect(filePath).toEqual(expectedFilePath);
+  const [nestedDirName] = nestedDir.split('/').reverse();
 
-  const actual = await fs.readFile(filePath, 'utf-8');
-  expect(actual).toEqual(expected);
+  const actualHtmlPath = await pageLoader(url, nestedDirName);
+  const expectedHtmlPath = path.join(nestedDir, htmlName);
+  expect(actualHtmlPath).toEqual(expectedHtmlPath);
 
-  const actualImagePath = path.join(process.cwd(), nestedDirName, filesDir, imageName);
+  const actualHtml = await fs.readFile(actualHtmlPath, 'utf-8');
+  expect(actualHtml).toEqual(expectedHtml);
+
+  const actualImagePath = path.join(currNestedFilesDir, imageName);
   const actualImage = await fs.readFile(actualImagePath);
-  expect(actualImage).toEqual(image);
+  expect(actualImage).toEqual(expectedImage);
+
+  const actualStylePath = path.join(currNestedFilesDir, styleName);
+  const actualStyle = await fs.readFile(actualStylePath);
+  expect(actualStyle).toEqual(expectedStyle);
+
+  const actualScriptPath = path.join(currNestedFilesDir, scriptName);
+  const actualScript = await fs.readFile(actualScriptPath);
+  expect(actualScript).toEqual(expectedScript);
 });

@@ -2,16 +2,15 @@ import path from 'path';
 
 const removeProtocol = (url) => url.replace(/^\/|https?:\/\//, '');
 const isLink = (str) => !!str.match(/^https?:\/\//i);
-const generateName = (name) => name.replaceAll(/[^a-zA-Z0-9]+/g, '-');
-const getHtmlFileName = (url) => `${generateName(removeProtocol(url))}.html`;
+const generateName = (name) => name.replaceAll(/[^a-zA-Z0-9]+/g, '-').replace(/-$/, '');
 const getFilesDirName = (url) => `${generateName(removeProtocol(url))}_files`;
-const getImageFileName = (url) => {
-  const normalized = url.replace(/^\/|https?:\/\//, '');
-  const ext = path.extname(url);
-  const withoutExt = normalized.replace(ext, '');
+const getFileName = (src, base) => {
+  const url = new URL(src, base);
+  const ext = path.extname(url.pathname) || '.html';
+  const withoutExt = url.href.replace(/^https?:\/\//, '').replace(ext, '');
   return `${generateName(withoutExt)}${ext}`;
 };
-const getImageUrl = (src, url) => {
+const getFileUrl = (src, url) => {
   if (isLink(src)) {
     return src;
   }
@@ -22,9 +21,18 @@ const getImageUrl = (src, url) => {
   return result.href;
 };
 
+const isSameDomain = (baseLink, link) => {
+  const baseUrl = new URL(baseLink);
+  const newUrl = new URL(link, baseUrl);
+  return newUrl.origin === baseUrl.origin;
+};
+
+const addSlashToEnd = (url) => `${url}/`.replace(/\/\/$/, '/');
+
 export {
-  getHtmlFileName,
   getFilesDirName,
-  getImageFileName,
-  getImageUrl,
+  getFileName,
+  getFileUrl,
+  isSameDomain,
+  addSlashToEnd,
 };
