@@ -14,7 +14,7 @@ program
     try {
       pageLoader(url, options.output)
         .then((data) => {
-          console.log(data);
+          console.log(`Page was successfully downloaded into '${data}'`);
           process.exit(0);
         })
         .catch((e) => {
