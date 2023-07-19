@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import axios from 'axios';
 import path from 'path';
 import debug from 'debug';
+import Listr from 'listr';
 import * as cheerio from 'cheerio';
 import * as f from './functions.js';
 
@@ -47,11 +48,17 @@ const pageLoader = (inputUrl, outputDir = '') => {
       return fs.writeFile(htmlFilePath, $.html());
     })
     .then(() => (Object.keys(filesLinks).length > 0 ? fs.mkdir(filesDirPath) : Promise.resolve({})))
-    .then(() => Object.keys(filesLinks).map((link) => axios.get(link, { responseType: 'arraybuffer' })))
-    .then((promises) => Promise.all(promises))
-    .then((responses) => responses.map((response) => fs
-      .writeFile(filesLinks[response.config.url], response.data, 'binary')))
-    .then((promises) => Promise.all(promises))
+    .then(() => {
+      const items = Object.keys(filesLinks).map((link) => (
+        {
+          title: link,
+          task: () => axios.get(link, { responseType: 'arraybuffer' })
+            .then((response) => fs.writeFile(filesLinks[response.config.url], response.data, 'binary')),
+        }
+      ));
+      const tasks = new Listr(items, { concurrent: true });
+      return tasks.run();
+    })
     .then(() => htmlFilePath);
 };
 
