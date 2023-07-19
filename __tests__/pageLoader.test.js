@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-conditional-expect */
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import path from 'path';
@@ -128,4 +129,26 @@ test('pageLoader custom dir relative path', async () => {
   const actualScriptPath = path.join(currNestedFilesDir, scriptName);
   const actualScript = await fs.readFile(actualScriptPath);
   expect(actualScript).toEqual(expectedScript);
+});
+
+test('pageLoader throw errors', async () => {
+  await expect(pageLoader(url, '/fake-dir')).rejects.toThrow();
+  await expect(pageLoader(url, '/root/fake-dir')).rejects.toThrow();
+  try {
+    await pageLoader('not-url-at-all');
+  } catch (e) {
+    expect(e.code).toEqual('ERR_INVALID_URL');
+  }
+
+  nock(/ru\.hexlet\.io/).get(/courses1/).reply(100);
+  await expect(pageLoader('https://ru.hexlet.io/courses1')).rejects.toThrow();
+
+  nock(/ru\.hexlet2\.io/).get(/courses1/).reply(300);
+  await expect(pageLoader('https://ru.hexlet2.io/courses1')).rejects.toThrow();
+
+  nock(/ru\.hexlet3\.io/).get(/courses1/).reply(400);
+  await expect(pageLoader('https://ru.hexlet3.io/courses1')).rejects.toThrow();
+
+  nock(/ru\.hexlet4\.io/).get(/courses1/).reply(500);
+  await expect(pageLoader('https://ru.hexlet4.io/courses1')).rejects.toThrow();
 });

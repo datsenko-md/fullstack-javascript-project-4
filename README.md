@@ -19,3 +19,4 @@
 * [Step 2](https://asciinema.org/a/596677)
 * [Step 3](https://asciinema.org/a/596733)
 * [Step 4](https://asciinema.org/a/596747)
+* [Step 4](https://asciinema.org/a/597580)

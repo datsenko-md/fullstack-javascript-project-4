@@ -18,7 +18,6 @@ const pageLoader = (inputUrl, outputDir = '') => {
   const filesLinks = {};
 
   return fs.access(outputDirPath)
-    .catch(() => fs.mkdir(outputDirPath, { recursive: true }))
     .then(() => axios.get(normalizedInputUrl))
     .then((response) => cheerio.load(response.data))
     .then(($) => {
