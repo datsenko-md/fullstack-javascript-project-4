@@ -10,7 +10,12 @@ import * as f from './functions.js';
 const pageLoader = (inputUrl, outputDir = '') => {
   const log = debug('page-loader');
   const normalizedInputUrl = f.addSlashToEnd(inputUrl);
-  const url = new URL(normalizedInputUrl);
+  let url;
+  try {
+    url = new URL(normalizedInputUrl);
+  } catch (e) {
+    return Promise.reject(e);
+  }
   const outputDirPath = path.resolve(process.cwd(), outputDir);
   const htmlFileName = f.getFileName(normalizedInputUrl, url);
   const htmlFilePath = path.resolve(outputDirPath, htmlFileName);

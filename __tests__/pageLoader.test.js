@@ -134,11 +134,7 @@ test('pageLoader custom dir relative path', async () => {
 test('pageLoader throw errors', async () => {
   await expect(pageLoader(url, '/fake-dir')).rejects.toThrow();
   await expect(pageLoader(url, '/root/fake-dir')).rejects.toThrow();
-  try {
-    await pageLoader('not-url-at-all');
-  } catch (e) {
-    expect(e.code).toEqual('ERR_INVALID_URL');
-  }
+  await expect(pageLoader('not-url-at-all')).rejects.toThrow();
 
   nock(/ru\.hexlet2\.io/).get(/courses1/).reply(300);
   await expect(pageLoader('https://ru.hexlet2.io/courses1/')).rejects.toThrow();
