@@ -19,7 +19,7 @@ const pageLoader = (inputUrl, outputDir = '') => {
   const filesLinks = {};
 
   return fs.access(outputDirPath)
-    .then(() => axios.get(normalizedInputUrl))
+    .then(() => axios.get(inputUrl))
     .then((response) => cheerio.load(response.data))
     .then(($) => {
       const handleFile = (index, element) => {

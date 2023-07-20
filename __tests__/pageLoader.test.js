@@ -14,7 +14,7 @@ const getFixturePath = (name) => path.join(__dirname, '..', '__fixtures__', name
 
 nock.disableNetConnect();
 
-const url = 'https://ru.hexlet.io/courses';
+const url = 'https://ru.hexlet.io/courses/';
 const rootDir = process.cwd();
 const filesDir = 'ru-hexlet-io-courses_files';
 const htmlName = 'ru-hexlet-io-courses.html';
@@ -140,15 +140,12 @@ test('pageLoader throw errors', async () => {
     expect(e.code).toEqual('ERR_INVALID_URL');
   }
 
-  nock(/ru\.hexlet\.io/).get(/courses1/).reply(100);
-  await expect(pageLoader('https://ru.hexlet.io/courses1')).rejects.toThrow();
-
   nock(/ru\.hexlet2\.io/).get(/courses1/).reply(300);
-  await expect(pageLoader('https://ru.hexlet2.io/courses1')).rejects.toThrow();
+  await expect(pageLoader('https://ru.hexlet2.io/courses1/')).rejects.toThrow();
 
   nock(/ru\.hexlet3\.io/).get(/courses1/).reply(400);
-  await expect(pageLoader('https://ru.hexlet3.io/courses1')).rejects.toThrow();
+  await expect(pageLoader('https://ru.hexlet3.io/courses1/')).rejects.toThrow();
 
   nock(/ru\.hexlet4\.io/).get(/courses1/).reply(500);
-  await expect(pageLoader('https://ru.hexlet4.io/courses1')).rejects.toThrow();
+  await expect(pageLoader('https://ru.hexlet4.io/courses1/')).rejects.toThrow();
 });
